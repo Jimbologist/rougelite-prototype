@@ -24,7 +24,7 @@ public class SeedRandom
     private readonly int c;
 
     //Seeded value determined by system clock or previous state.
-    private ulong state;
+    private long state;
 
     //List of all SeedRandom instances, EXCEPT main seed.
     private static List<SeedRandom> allRandoms;
@@ -35,7 +35,7 @@ public class SeedRandom
      */
     public SeedRandom()
     {
-        state = (ulong)new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds();
+        state = (long)new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds();
         allRandoms = new List<SeedRandom>();
 
         //Aribtary shift values of good quality
@@ -49,7 +49,7 @@ public class SeedRandom
      * Constructor can set seed for this instance using default a, b, and c values.
      * This and the next constructor are for SeedRandoms separate fromt the main one.
      */
-    public SeedRandom(ulong newSeed)
+    public SeedRandom(long newSeed)
     {
         state = newSeed;
 
@@ -66,7 +66,7 @@ public class SeedRandom
      * Ideally, these values should be constants from this class that are known
      * to be of high quality, separated by category of randomness.
      */
-    public SeedRandom(ulong newSeed, int a, int b, int c)
+    public SeedRandom(long newSeed, int a, int b, int c)
     {
         state = newSeed;
         this.a = a;
@@ -77,7 +77,7 @@ public class SeedRandom
 
     //Set seed of current instance. Ideally, this should be used after construction to 
     //shift seeds based on IDs of Room, Item, Character, etc.
-    public void SetSeed(ulong newSeed)
+    public void SetSeed(long newSeed)
     {
         state = newSeed;
     }
@@ -88,11 +88,11 @@ public class SeedRandom
         state ^= state << a;
         state ^= state >> b;
         state ^= state << c;
-        return state;
+        return (ulong)state;
     }
 
-    //Returns next state as uint32
-    public uint Random32U()
+    //Returns next state as uint32 (only positive values)
+    public uint Rand32U()
     {
         state ^= state << a;
         state ^= state >> b;
@@ -100,8 +100,8 @@ public class SeedRandom
         return (uint)state;
     }
 
-    //Returns next state as signed int32
-    public int Random32S()
+    //Returns next state as signed int32 (can be negative)
+    public int Rand32S()
     {
         state ^= state << a;
         state ^= state >> b;
@@ -110,7 +110,7 @@ public class SeedRandom
     }
 
     //Returns next state as float value in [0, 1)
-    public float RandomFloat()
+    public float RandFloat()
     {
         state ^= state << a;
         state ^= state >> b;
@@ -118,11 +118,19 @@ public class SeedRandom
         return (float)state * (1.0f / ulong.MaxValue);
     }
 
-    public float RandomRangeFloat(float min, float max)
+    public float RandRangeFloat(float min, float max)
     {
         state ^= state << a;
         state ^= state >> b;
         state ^= state << c;
-        return ((float)state % (max - min)) + min;
+        return ((float)state % ((max + 1.0f) - min)) + min;
+    }
+
+    public uint RandRangeUInt(uint min, uint max)
+    {
+        state ^= state << a;
+        state ^= state >> b;
+        state ^= state << c;
+        return ((uint)state % ((max + 1) - min)) + min;
     }
 }

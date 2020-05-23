@@ -6,7 +6,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Floor")]
 public class Floor : ScriptableObject
 {
-    private const uint baseRoomPoolSize = 10;
+    public const uint baseMinRooms = 9;
 
     //All rooms for floor. Only add room datas through editor.
     [SerializeField] private List<RoomData> startRooms = new List<RoomData>();
@@ -18,7 +18,8 @@ public class Floor : ScriptableObject
     [SerializeField] private RuleTile defaultWallTiles;
     [SerializeField] private RuleTile defaultFloorTiles;
     [SerializeField] private RuleTile defaultBoundTiles;
-    [SerializeField] private uint floorID = 0;
+    [SerializeField] private byte floorID = 0;
+    [SerializeField] private byte extraDeadEnds = 0;    //Any floor-specific rooms that require dead ends.
 
     public List<RoomData> StartRooms { get => startRooms; }
     public List<RoomData> EasyRooms { get => easyRooms; }
@@ -30,5 +31,4 @@ public class Floor : ScriptableObject
     public RuleTile DefaultFloorTiles { get => defaultFloorTiles; }
     public RuleTile DefaultBoundTiles { get => defaultBoundTiles; }
     public uint FloorID { get { return floorID; } }
-    public int RoomPoolSize { get { return Mathf.CeilToInt(baseRoomPoolSize * Mathf.Sqrt(floorID)); } }
 }

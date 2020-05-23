@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startRooms:
   - {fileID: 11400000, guid: 1221dacc6027c8f45810cead6c12f538, type: 2}
-  easyRooms: []
+  easyRooms:
+  - {fileID: 11400000, guid: 7821f82cf87f20d48b92aa9677491a44, type: 2}
+  - {fileID: 11400000, guid: 441887db28c7f6f49b8aa4fb1bd7e665, type: 2}
   mediumRooms: []
   hardRooms: []
   extremeRooms: []

@@ -25,8 +25,6 @@ public class PlayerControl : MonoBehaviour
 
     [SerializeField] private Weapon currWeapon;
 
-    [SerializeField] private Transform defaultLeftHandPos;
-    [SerializeField] private Transform defaultRightHandPos;
     [SerializeField] private Transform weaponPosition;
     [SerializeField] private Transform aimTransform;
     [SerializeField] private Rigidbody2D rb2d;
@@ -81,9 +79,6 @@ public class PlayerControl : MonoBehaviour
         aimTransform = gameObject.transform.Find("Aim");
         weaponPosition = aimTransform.Find("gunSlot");
 
-        //
-        defaultLeftHandPos = gameObject.transform.Find("leftHandPos");
-        defaultRightHandPos = gameObject.transform.Find("rightHandPos");
         rb2d = gameObject.transform.GetComponent<Rigidbody2D>();
         
 

@@ -34,7 +34,7 @@ public class PlayerStats : MonoBehaviour
 
     void Awake()
     {
-        moveSpeed = 10f;
+        moveSpeed = 5f;
         shotSpeedMultiplier = 1.0f;
         accuracyMultiplier = 1.0f;
     }

@@ -17,8 +17,8 @@ public static class RoomUtils
     public const int BASE_ROOM_Y = 16;
 
     //Size of connector doors/halls between rooms.
-    public const int BASE_DOOR_OFFSET = 1;
-    public const int BASE_WALL_HEIGHT = 2;
+    public const int DOOR_OFFSET = 2;
+    public const int WALL_HEIGHT = 2;
 
     public static bool ValidateRoomSize(RoomData roomCheck)
     {

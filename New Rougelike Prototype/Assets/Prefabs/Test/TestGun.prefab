@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1889435422}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.418, y: -0.182, z: 0}
+  m_LocalPosition: {x: -0.208, y: -0.094, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2485258926647499141}
@@ -201,18 +201,18 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.012559533, y: -0.016746283}
+  m_Offset: {x: 0.026059061, y: -0.009390414}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.4375, y: 1.1875}
+    oldSize: {x: 0.71875, y: 0.59375}
     newSize: {x: 0.23, y: 0.19}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.3453972, y: 1.1037707}
+  m_Size: {x: 0.6502623, y: 0.5447203}
   m_EdgeRadius: 0
 --- !u!114 &232995483
 MonoBehaviour:
@@ -226,19 +226,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 413a027808dc6ee4a8a50ae13dffa545, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rarity: {fileID: 0}
   baseName: 
-  fullName: 
   sellPrice: 0
   premSellPrice: 0
+  fullName: 
+  flavorText: 
   baseDamage: 0
   baseAccuracy: 0
-  baseFireRate: 0
+  baseFireDelay: 0
   baseReloadSpeed: 0
   baseShotSpeed: 0
   baseMagSize: 0
   baseAmmoExpended: 0
   mainBullet: {fileID: 988535855551007170, guid: 5eb63ff7521ded54095424fb8c2784a5,
     type: 3}
+  trueDamage: 0
+  trueAccuracy: 0
+  trueFireDelay: 0
+  trueReloadSpeed: 0
+  trueShotSpeed: 0
+  trueMagSize: 0
+  trueAmmoExpended: 0
   isEquipped: 0
   pickupBox: {fileID: 0}
   leftHandPivot: {fileID: 0}
@@ -269,7 +278,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6926358710869643957}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.709, y: 0.329, z: 0}
+  m_LocalPosition: {x: 0.359, y: 0.163, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2485258926647499141}

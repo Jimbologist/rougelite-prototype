@@ -3,19 +3,34 @@ using UnityEngine.Tilemaps;
 using System.Collections.Generic;
 using System;
 
+//State of room in terms of player knowledge (visitation, items, etc.)
+public enum RoomState
+{
+    Invisible = 0,  //Distant from player; not neighboring found rooms
+    Nearby = 1,     //Not visited, but is neighbor of found room
+    Visited = 2,    //Player has been inside room, but not currently in it
+    Current = 3     //Player is currently in this room
+}
+
 public class RoomBase : MonoBehaviour
 {
     public RoomData roomData;
-    public Vector3Int mapLocation;
+    public List<RoomBase> neighbors;
+    public Vector3Int location;
+    public bool isDeadEnd;
 
     private Vector3Int roomOrigin;    //Bottom-leftmost corner of room relative to world space.
-    private List<RoomBase> neighbors;
-    private int layoutWidth;
-    private int layoutHeight;
+    private RoomState roomState;
+    private int roomWidth;
+    private int roomHeight;
+
+    public RoomState RoomState { get { return roomState; } }
 
     protected void Awake()
     {
-        
+        neighbors = new List<RoomBase>();
+        isDeadEnd = false;
+        roomState = RoomState.Invisible;
     }
 
     // Start is called before the first frame update
@@ -30,12 +45,80 @@ public class RoomBase : MonoBehaviour
         
     }
 
-    //Set roomdata for this Room object; ideally random data from LevelGenerator.
-    public void InitializeRoom(RoomData randData, Vector3Int originPosition, Vector3Int mapPosition)
+    //Initialize location of room on map at start of level; should only
+    // be done before roomData is determined already.
+    // Note: make a ChangeLocation() method if location needs to change for whatever reason
+    // that accounts for the current roomData.
+    public virtual void InitLocation(Vector3Int mapPosition)
     {
-        this.roomData = randData;
-        this.roomOrigin = originPosition;
-        this.mapLocation = mapPosition;
+        if (roomData != null)
+            return;
+        this.location = mapPosition;
+
+        //Set room origin based on map location.
+        //ONLY ACCOUNTS FOR ROOMS OF THE BASE SIZE!!!
+        int offsetX = Mathf.Abs(RoomUtils.DOOR_OFFSET * location.x);
+        int offsetY = Mathf.Abs(RoomUtils.DOOR_OFFSET * location.y);
+
+        int originX = (location.x * RoomUtils.BASE_ROOM_X);
+        if(originX != 0)
+            originX += (originX > 0) ? offsetX : -offsetX;
+
+        int originY = location.y * RoomUtils.BASE_ROOM_Y;
+        if(originY != 0)
+            originY += (originY > 0) ? offsetY : -offsetY;
+
+        this.roomOrigin = new Vector3Int(originX, originY, location.z);
+        this.gameObject.transform.position = this.roomOrigin;
+    }
+
+    public void SetRoomData(RoomData roomData)
+    {
+        this.roomData = roomData;
+        roomWidth = roomData.RoomLayout.width;
+        roomHeight = roomData.RoomLayout.height;
+    }
+
+    public virtual void UpdateNeighbors()
+    {
+        //Add new neighbors to rooms' lists
+        // This should work for any size/type of room using direction, as long as
+        // different sized rooms are stored multiple times for each tile the occupy!!!
+        // ^^^^^ this is like, super important to keep in mind!!!
+        RoomBase value = null;
+        Dictionary<Vector3Int, RoomBase> map = LevelGenerator.Instance.LevelMap;
+        if (map.TryGetValue(location + Vector3Int.up, out value))
+        {
+            if (value != this)
+            {
+                this.neighbors.Add(value);
+                value.neighbors.Add(this);
+            }
+        }
+        if (map.TryGetValue(location + Vector3Int.down, out value))
+        {
+            if (value != this)
+            {
+                this.neighbors.Add(value);
+                value.neighbors.Add(this);
+            }
+        }
+        if (map.TryGetValue(location + Vector3Int.left, out value))
+        {
+            if (value != this)
+            {
+                this.neighbors.Add(value);
+                value.neighbors.Add(this);
+            }
+        }
+        if (map.TryGetValue(location + Vector3Int.right, out value))
+        {
+            if (value != this)
+            {
+                this.neighbors.Add(value);
+                value.neighbors.Add(this);
+            }
+        }
     }
 
     public virtual void LoadRoom()
@@ -72,21 +155,28 @@ public class RoomBase : MonoBehaviour
                     continue;
                 }
 
+                //Now get color string; we know we need it now that we know we're in texture bounds
                 string colorHex = ColorUtility.ToHtmlStringRGBA(layout.GetPixel(x, y));
                 string colorHexRGB = colorHex.Remove(colorHex.Length - 2);
 
                 //Check pre-conditions that require reading in bounds of texture.
                 //Ensure only walls are placed in tiles 1 and 2 below top room boundary!
-                if (y >= layout.height - RoomUtils.BASE_WALL_HEIGHT)
+                if (y >= layout.height - RoomUtils.WALL_HEIGHT)
                 {
                     if (colorHexRGB == RoomUtils.BASE_WALL)
+                    {
                         SpawnWallBound(colorHex, x, y);
+                    }
                     else
-                        Debug.Log("Attempted to spawn invalid object in top of room!");
+                    {
+                        if (colorHexRGB != RoomUtils.BASE_FLOOR)
+                            Debug.Log("Attempted to spawn invalid object in top of room!");
+                    }
                     continue;
                 }
 
                 //Placement is valid and in bounds; check base color and place tile accordingly:
+                //TODO: Make this switch statement into its own function! It will eventually become very complex.
                 switch (colorHexRGB)
                 {
                     case RoomUtils.BASE_WALL:
@@ -122,10 +212,10 @@ public class RoomBase : MonoBehaviour
 
         /*This is where other wall types MIGHT be checked later somehow.*/
 
-        //Validate placement of wall relative to other walls by checking if above tile(s)
+        /*Validate placement of wall relative to other walls by checking if above tile(s)
         //are perspective walls ( guarantees invalid placement and overrides any other conditions)
-        Vector3Int up1TilePos = new Vector3Int(x, y + 1, mapLocation.z);
-        Vector3Int up2TilePos = new Vector3Int(x, y + 2, mapLocation.z);
+        Vector3Int up1TilePos = new Vector3Int(x, y + 1, location.z);
+        Vector3Int up2TilePos = new Vector3Int(x, y + 2, laocation.z);
         TileBase up1Tile = LevelGenerator.Instance.WallsTilemap.GetTile(up1TilePos);
         TileBase up2Tile = LevelGenerator.Instance.WallsTilemap.GetTile(up2TilePos);
 
@@ -136,13 +226,12 @@ public class RoomBase : MonoBehaviour
             {
                 Debug.Log("Error. Invalid boundary placement (1-2 spaces between separate boundaries)");
                 //Replace perspective walls with boundaries for valid room.
-                wallTile = placeTile;
-                LevelGenerator.Instance.WallsTilemap.SetTile(up1TilePos, wallTile);
-                LevelGenerator.Instance.WallsTilemap.SetTile(up2TilePos, wallTile);
+                LevelGenerator.Instance.WallsTilemap.SetTile(up1TilePos, placeTile);
+                LevelGenerator.Instance.WallsTilemap.SetTile(up2TilePos, placeTile);
             }
         }
-
-        if(y >= 1)
+        */
+        if(y > 1)
         {
             Color color1Down = roomData.RoomLayout.GetPixel(x, y - 1);
             Color color2Down = roomData.RoomLayout.GetPixel(x, y - 2);
@@ -150,8 +239,6 @@ public class RoomBase : MonoBehaviour
             //If not bottom of room and the two spaces below are free, place perspective wall tiles.
             if (RoomUtils.IsSpaceEmpty(color1Down) && RoomUtils.IsSpaceEmpty(color2Down))
             {
-                Debug.Log("Wall tiles should be placed now");
-
                 //If wall tile not already determined, make default wall.
                 //(may already be a boundary instead due to invalid placement).
                 if(wallTile == null)
@@ -159,8 +246,8 @@ public class RoomBase : MonoBehaviour
                 if (wallTile == null)
                     wallTile = LevelGenerator.Instance.Floor.DefaultWallTiles;
 
-                Vector3Int tile1Down = new Vector3Int(x, y - 1, mapLocation.z);
-                Vector3Int tile2Down = new Vector3Int(x, y - 2, mapLocation.z);
+                Vector3Int tile1Down = new Vector3Int(x, y - 1, location.z);
+                Vector3Int tile2Down = new Vector3Int(x, y - 2, location.z);
 
                 //Place two wall tiles below lowest wall bound!
                 LevelGenerator.Instance.WallsTilemap.SetTile((roomOrigin + tile1Down), wallTile);
@@ -169,7 +256,7 @@ public class RoomBase : MonoBehaviour
         }
 
         //Place determined rule tile at position (roomX, roomY, roomZ) relative to room origin,
-        Vector3Int tilePos = new Vector3Int(x, y, mapLocation.z);
+        Vector3Int tilePos = new Vector3Int(x, y, location.z);
         LevelGenerator.Instance.WallsTilemap.SetTile((roomOrigin + tilePos), placeTile);
     }
 
@@ -190,7 +277,7 @@ public class RoomBase : MonoBehaviour
         //This is where other floor types will be checked later somehow.
 
         //Place determined rule tile at position (roomX, roomY, roomZ) relative to room origin.
-        Vector3Int tilePos = new Vector3Int(x, y, mapLocation.z);
+        Vector3Int tilePos = new Vector3Int(x, y, location.z);
         LevelGenerator.Instance.FloorTilemap.SetTile((roomOrigin + tilePos), placeTile);
     }
 }

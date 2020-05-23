@@ -108,7 +108,11 @@ public class Weapon : Lootable
     {
 
     }
-
+    
+    //TODO: REALLY IMPORTANT TO TRY WHEN THE TIME COMES:
+    // Move players "aim" obj transform is lined up in world space (ignoring transform relative to parents)
+    // is lined up with the weapon's shot position. This will be difficult to work out, but if
+    // it this is fulfilled, shots will be accurate with the crosshair!!
     public virtual void Equip(PlayerControl pickupPlayer)
     {
         this.currentPlayer = pickupPlayer;
