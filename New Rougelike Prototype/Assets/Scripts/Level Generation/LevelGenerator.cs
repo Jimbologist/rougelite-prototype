@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Threading;
 
 //This is a test comment
 
@@ -34,17 +35,17 @@ public class LevelGenerator : Singleton<LevelGenerator>
     public List<RoomBase> DeadEnds { get; private set; }
 
     //MinRooms = Ceil(7 * sqrt(floorNum))
-    public uint MinRooms { get { return (uint)Mathf.CeilToInt(Floor.baseMinRooms * Mathf.Sqrt(floorNum)); } }
+    public uint MinRooms { get { return (uint)Mathf.CeilToInt(Floor.BASE_MIN_ROOMS * Mathf.Sqrt(floorNum)); } }
     //MaxRooms = Ceil(MinRooms + sqrt(MinRooms))
     public uint MaxRooms { get { return (uint)Mathf.CeilToInt(MinRooms + Mathf.Sqrt(MinRooms)); } }
 
     //Private data for specifics of level generation
     private uint floorNum = 1;  // <- Right now starts at 1 and increases each scene transition. Later will involve temp save functionality
 
+    private RoomBase start;
+
     protected override void Awake()
     {
-        base.Awake();
-
         //TODO: Use new abc values and seed from GameManager later!
         LevelRNG = new SeedRandom();
         LevelMap = new Dictionary<Vector3Int, RoomBase>();
@@ -114,6 +115,7 @@ public class LevelGenerator : Singleton<LevelGenerator>
         currRoom = InitializeRoom(currPos, "Start Room");
         currRoom.SetRoomData(startRoomData);
         LevelMap.Add(currPos, currRoom);
+        start = currRoom;
 
         /*Randomly generate level. No rooms will be loaded, just initialized at random positions. */
         uint baseNumRooms = LevelRNG.RandRangeUInt(MinRooms, MaxRooms);
@@ -156,34 +158,111 @@ public class LevelGenerator : Singleton<LevelGenerator>
                 DeadEnds.Add(room);
             }
         }
-        StartCoroutine(LoadRooms());
+        LoadRooms();
     }
 
     //Loads all rooms on current floor given certain conditions; you should disable all
     // non-neighbors after calling this method!
-    private IEnumerator LoadRooms()
+    private void LoadRooms()
     {
-        //For testing, only grabs data from easy rooms!!
-        //TODO: Randomly grab rooms from correct difficulty lists for normal rooms!
-        foreach(var room in LevelMap.Values)
+        List<RoomData> roomDiff;
+        //Temp list of doors made to prevent duplicating valid doors!
+
+        //Initialized positions of all rooms on the map. No rooms have
+        // a layout, but will have doors and neighbors initialized.
+        foreach(var roomPos in LevelMap)
         {
-            if (room.roomData == null)
+            //if (roomPos.Value.isDeadEnd)
+            //  continue;
+            if (roomPos.Value.Data == null)
             {
-                //if(DeadEnds.Contains(room))
-                //{
-                //    continue;
-                //}
-                RoomData normRoomData = Floor.EasyRooms[Mathf.Abs(LevelRNG.Rand32S()) % Floor.EasyRooms.Count];
-                room.SetRoomData(normRoomData);
-                //TODO: Check if room data is valid with neighbors; i.e. if doors can be placed to
-                // transition into neighboring rooms. Should probably be its own long method that
-                // checks direction and type of room, then returns a bool if layout is valid.
+                //Spawn doors at each unloaded neighbor. Layout not accounting for this yet.
+                foreach (var neighbor in roomPos.Value.neighbors)
+                {
+                    if (!LevelMap[neighbor].isPosFinal)
+                        continue;
+
+                    //Check if door already exists by seeing if one already references
+                    //the same two rooms being check now. Bool is to continue to next neighbor
+                    //only if conditions inside nested loop are met!
+                    bool isNewDoor = true;
+                    foreach (var door in LevelMap[neighbor].doors)
+                    {
+                        //Check if door already exists by seeing if one already references
+                        //the same two rooms being check now.
+                        if (door.Neighbor1 == neighbor && door.Neighbor2 == roomPos.Key)
+                            isNewDoor = false;
+                        if (door.Neighbor2 == neighbor && door.Neighbor1 == roomPos.Key)
+                            isNewDoor = false;
+                    }
+                    if (!isNewDoor)
+                    {
+                        continue;
+                    }
+
+                    GameObject doorObj = new GameObject(string.Format("Room_{0}_Door_{1}", roomPos.ToString(), roomPos.Value.doors.Count));
+                    DoorBase newDoor = doorObj.AddComponent<DoorBase>();
+                    newDoor.SpawnDoor(roomPos.Key, neighbor);
+                }
             }
-            room.LoadRoom();
-            yield return null;
+            
+            //Finally, load room now that doors and layout are valid!
+        }
+
+        //All doors are spawned, now can verify layouts. Loops through
+        // all doors and verify that the layout allows access to all neighbors;
+        // if layout is invalid, re-roll the room until valid one is found.
+        
+        foreach (var roomPos in LevelMap)
+        {
+            //For testing, only grabs data from easy rooms!!
+            //TODO: Randomly grab rooms from correct difficulty lists for normal rooms!
+            roomDiff = Floor.EasyRooms;
+            if (roomPos.Value == start) roomDiff = Floor.StartRooms;
+            RoomData normRoomData = null;
+            //Get a new layout for a room that allows all neighbors and doors created
+            //to be accessible. A path should be available from each door to each other door!
+            bool validLayout = false;
+            while (!validLayout)
+            {
+                normRoomData = roomDiff[Mathf.Abs(LevelRNG.Rand32S()) % roomDiff.Count];
+                roomPos.Value.SetRoomData(normRoomData);
+                if (roomPos.Value.neighbors.Count == 1)
+                {
+                    //Check if 2x2 area in front of door can be walked on.
+                    //Also only 1 door since dead end, so check index 0.
+                    if (roomPos.Value.SpaceNearDoorWalkable(0))
+                    {
+                        validLayout = true;
+                        Debug.Log("Dead end's only door is free!");
+                    }
+                }
+                else if (roomPos.Value.CanPathFindToDoors())
+                {
+                    validLayout = true;
+                    Debug.Log("Path found!");
+                }
+                else
+                    Debug.Log("Re-rolling room!");
+            }
+            roomPos.Value.LoadRoom();
         }
 
         //TODO: For each dead end, get special rooms in a pre-determined order
         // for necessary ones and then random order for other kinds!!
     }
+
+    private List<RoomData> GetStandardRoomList()
+    {
+        float difficultyChance = LevelRNG.RandFloat();
+        if (difficultyChance < 0.05f)
+            return Floor.ExtremeRooms;
+        else if (difficultyChance < 0.20f)
+            return Floor.HardRooms;
+        else if (difficultyChance < 0.55f)
+            return Floor.MediumRooms;
+        else
+            return Floor.EasyRooms;
+    }
+
 }

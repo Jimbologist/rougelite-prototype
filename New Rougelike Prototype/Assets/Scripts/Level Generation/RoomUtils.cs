@@ -22,7 +22,7 @@ public static class RoomUtils
 
     public static bool ValidateRoomSize(RoomData roomCheck)
     {
-        Texture2D layout = roomCheck.RoomLayout;
+        Texture2D layout = roomCheck.Layout;
         if (layout.width == BASE_ROOM_X && layout.height == BASE_ROOM_Y)
             return true;
         else if (layout.width == (2 * BASE_ROOM_X) && layout.height == (2 * BASE_ROOM_Y))
@@ -32,7 +32,7 @@ public static class RoomUtils
 
     //Returns true if space is empty/is just a baseFloor.
     //tileCheck = color of tile in map to check.
-    public static bool IsSpaceEmpty(Color tileCheck)
+    public static bool IsSpaceFree(Color tileCheck)
     {
         if (tileCheck == null) return false;
 

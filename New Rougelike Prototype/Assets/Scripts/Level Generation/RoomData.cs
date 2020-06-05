@@ -1,97 +1,37 @@
 ﻿using UnityEngine;
 
+//Add more room types here as they are made. Each type will also
+// have inherited types from RoomBase. This enum will allow the
+// RoomData object to associate with the correct type of room
+public enum RoomType
+{
+    Base = 0
+}
+
 [CreateAssetMenu(menuName = "RoomData")]
 public class RoomData : ScriptableObject
 {
     [SerializeField] private Texture2D roomLayout = null;
-    [SerializeField] private RuleTile wallTiles = null;
-    [SerializeField] private RuleTile boundTiles = null;
-    [SerializeField] private RuleTile floorTiles = null;
     [SerializeField] private uint roomID = 0;
 
-    public Texture2D RoomLayout { get { return roomLayout; } }
-    public RuleTile DefaultWallTiles { get { return wallTiles; } }
-    public RuleTile DefaultFloorTiles { get { return floorTiles; } }
-    public RuleTile DefaultBoundTiles { get { return boundTiles; } }
+    public Texture2D Layout { get { return roomLayout; } }
     public uint RoomID { get { return roomID; } }
-    
-    public virtual bool CheckTopDoor()
+    public int NumSectorsX 
     {
-        Color[] doorCheck = new Color[4];
-        doorCheck[0] = GetTileColor((roomLayout.width / 2), roomLayout.height);
-        doorCheck[1] = GetTileColor((roomLayout.width / 2) + 1, roomLayout.height);
-        doorCheck[2] = GetTileColor((roomLayout.width / 2), roomLayout.height - 1);
-        doorCheck[3] = GetTileColor((roomLayout.width / 2) + 1, roomLayout.height - 1);
-
-        foreach(Color tile in doorCheck)
+        get 
         {
-            if (!RoomUtils.IsSpaceEmpty(tile))
-                return false;
-        }
-
-        return true;
+            if (roomLayout.width % RoomUtils.BASE_ROOM_X != 0)
+                return -1;
+            return roomLayout.width / RoomUtils.BASE_ROOM_X; 
+        } 
     }
-    public virtual bool CheckBottomDoor()
+    public int NumSectorsY
     {
-        Color[] doorCheck = new Color[4];
-        doorCheck[0] = GetTileColor((roomLayout.width / 2), 0);
-        doorCheck[1] = GetTileColor((roomLayout.width / 2) + 1, 0);
-        doorCheck[2] = GetTileColor((roomLayout.width / 2), 1);
-        doorCheck[3] = GetTileColor((roomLayout.width / 2) + 1, 1);
-
-        foreach (Color tile in doorCheck)
+        get
         {
-            if (!RoomUtils.IsSpaceEmpty(tile))
-                return false;
+            if (roomLayout.height % RoomUtils.BASE_ROOM_Y != 0)
+                return -1;
+            return roomLayout.height / RoomUtils.BASE_ROOM_Y;
         }
-
-        return true;
-    }
-    public virtual bool CheckRightDoor()
-    {
-        Color[] doorCheck = new Color[4];
-        doorCheck[0] = GetTileColor(roomLayout.width, (roomLayout.height / 2) + 1);
-        doorCheck[1] = GetTileColor(roomLayout.width, (roomLayout.height / 2));
-        doorCheck[2] = GetTileColor(roomLayout.width - 1, (roomLayout.height / 2) + 1);
-        doorCheck[3] = GetTileColor(roomLayout.width - 1, (roomLayout.height / 2));
-
-        foreach (Color tile in doorCheck)
-        {
-            if (!RoomUtils.IsSpaceEmpty(tile))
-                return false;
-        }
-
-        return true;
-    }
-    public virtual bool CheckLeftDoor()
-    {
-        Color[] doorCheck = new Color[4];
-        doorCheck[0] = GetTileColor(roomLayout.width, (roomLayout.height / 2) + 1);
-        doorCheck[1] = GetTileColor(roomLayout.width, (roomLayout.height / 2));
-        doorCheck[2] = GetTileColor(roomLayout.width - 1, (roomLayout.height / 2) + 1);
-        doorCheck[3] = GetTileColor(roomLayout.width - 1, (roomLayout.height / 2));
-
-        foreach (Color tile in doorCheck)
-        {
-            if (!RoomUtils.IsSpaceEmpty(tile))
-                return false;
-        }
-
-        return true;
-    }
-
-    public virtual bool IsDeadEnd()
-    {
-        int count = 0;
-        count += CheckTopDoor() ? 1 : 0;
-        count += CheckBottomDoor() ? 1 : 0;
-        count += CheckLeftDoor() ? 1 : 0;
-        count += CheckRightDoor() ? 1 : 0;
-        return count > 1;
-    }
-
-    public virtual Color GetTileColor(int x, int y)
-    {
-        return roomLayout.GetPixel(x, y);
     }
 }

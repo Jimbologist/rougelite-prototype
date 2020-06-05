@@ -17,10 +17,20 @@ MonoBehaviour:
   easyRooms:
   - {fileID: 11400000, guid: 7821f82cf87f20d48b92aa9677491a44, type: 2}
   - {fileID: 11400000, guid: 441887db28c7f6f49b8aa4fb1bd7e665, type: 2}
+  - {fileID: 11400000, guid: 6ce4b7375a6548b43aadd44e651f3666, type: 2}
+  - {fileID: 11400000, guid: 84e5ebffb63394846bdc348a77a322b5, type: 2}
+  - {fileID: 11400000, guid: 2a8ee8d173be29d4982e0d6d9c9baa17, type: 2}
   mediumRooms: []
   hardRooms: []
   extremeRooms: []
-  defaultWallTiles: {fileID: 11400000, guid: e725b6ce4e79d044d9c1e4bb06604ea4, type: 2}
-  defaultFloorTiles: {fileID: 11400000, guid: 4568c65d3fb6ddd4ab3cb2f6e8f58482, type: 2}
-  defaultBoundTiles: {fileID: 11400000, guid: b5211af1223dfe54d937dd42b1037573, type: 2}
+  wallTiles:
+  - {fileID: 11400000, guid: e725b6ce4e79d044d9c1e4bb06604ea4, type: 2}
+  floorTiles:
+  - {fileID: 11400000, guid: 4568c65d3fb6ddd4ab3cb2f6e8f58482, type: 2}
+  boundTiles:
+  - {fileID: 11400000, guid: b5211af1223dfe54d937dd42b1037573, type: 2}
+  doorSprites:
+  - {fileID: 21300000, guid: 536493a1d2f3953458f20c458af5f3a3, type: 3}
+  - {fileID: 21300000, guid: 5a98cad706738bf469d80997a4a40dc9, type: 3}
   floorID: 1
+  extraDeadEnds: 0
