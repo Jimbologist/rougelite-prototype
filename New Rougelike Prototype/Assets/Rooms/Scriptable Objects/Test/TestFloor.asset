@@ -20,6 +20,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6ce4b7375a6548b43aadd44e651f3666, type: 2}
   - {fileID: 11400000, guid: 84e5ebffb63394846bdc348a77a322b5, type: 2}
   - {fileID: 11400000, guid: 2a8ee8d173be29d4982e0d6d9c9baa17, type: 2}
+  - {fileID: 11400000, guid: 352a04814186b0b4eb2f35518ac9ceb0, type: 2}
+  - {fileID: 11400000, guid: 7193fdf3d02ca6044b7171d8d0eb69a7, type: 2}
+  - {fileID: 11400000, guid: 14c7e7cab46bb5a43a60bb89245a3d4f, type: 2}
+  - {fileID: 11400000, guid: efddb0b5d8edbba499666e8a3265507b, type: 2}
   mediumRooms: []
   hardRooms: []
   extremeRooms: []

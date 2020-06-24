@@ -26,6 +26,8 @@ public class SeedRandom
     //Seeded value determined by system clock or previous state.
     private long state;
 
+    public long State { get => state; }
+
     //List of all SeedRandom instances, EXCEPT main seed.
     private static List<SeedRandom> allRandoms;
 

@@ -17,6 +17,7 @@ public class PathGrid<T>
     private bool initialized = false;
 
     public Vector2Int GridSize { get => gridSize; }
+    public int GridArea { get => gridSize.x * gridSize.y; }
 
     public PathGrid(Vector2 _gridWorldSize, float nodeRadius)
     {
@@ -50,7 +51,8 @@ public class PathGrid<T>
         return grid[x, y];
     }
 
-    public List<PathNode<T>> GetNeighbours(PathNode<T> node)
+    //Get neighbors of a node, including diagonals
+    public List<PathNode<T>> GetNeighboursDiag(PathNode<T> node)
     {
         List<PathNode<T>> neighbors = new List<PathNode<T>>();
 
@@ -59,6 +61,30 @@ public class PathGrid<T>
             for(int y = -1; y <= 1; y++)
             {
                 if (x == 0 && y == 0) continue;
+
+                int checkX = node.gridX + x;
+                int checkY = node.gridY + y;
+
+                //If neighbor coordinates are in grid bounds, add neighbor.
+                if (checkX >= 0 && checkX < gridSize.x && checkY >= 0 && checkY < gridSize.y)
+                    neighbors.Add(grid[checkX, checkY]);
+            }
+        }
+
+        return neighbors;
+    }
+
+    //Get neighbors of a node, NOT including diagonals.
+    //Only up, down, left, and right.
+    public List<PathNode<T>> GetNeighbours(PathNode<T> node)
+    {
+        List<PathNode<T>> neighbors = new List<PathNode<T>>();
+
+        for (int x = -1; x <= 1; x++)
+        {
+            for (int y = -1; y <= 1; y++)
+            {
+                if (x != 0 && y != 0) continue;
 
                 int checkX = node.gridX + x;
                 int checkY = node.gridY + y;
@@ -91,7 +117,7 @@ public class PathGrid<T>
         }
     }
 
-    public List<PathNode<T>> FindPathAStar(Vector2 startPos, Vector2 targetPos)
+    public List<PathNode<T>> FindPathAStar(Vector2 startPos, Vector2 targetPos, bool includeDiagonals)
     {
         if (!initialized)
         {
@@ -101,30 +127,25 @@ public class PathGrid<T>
         PathNode<T> startNode = NodeFromWorldPoint(startPos);
         PathNode<T> targetNode = NodeFromWorldPoint(targetPos);
 
-       // Debug.Log(new Vector2Int(targetNode.gridX, targetNode.gridY));
-        //Debug.Log(new Vector2Int(startNode.gridX, startNode.gridY));
-
-        List<PathNode<T>> openSet = new List<PathNode<T>>();
+        List<PathNode<T>> neighbors;
+        PathHeap<PathNode<T>> openSet = new PathHeap<PathNode<T>>(GridArea);
         HashSet<PathNode<T>> closedSet = new HashSet<PathNode<T>>();
         openSet.Add(startNode);
 
         while(openSet.Count > 0)
         {
-            //TODO: Implement a heap instead of this unoptimized shit
-            PathNode<T> current = openSet[0];
-            for (int i = 1; i < openSet.Count; i++)
-            {
-                if(openSet[i].fCost < current.fCost || (openSet[i].fCost == current.fCost && openSet[i].hCost < current.hCost))
-                    current = openSet[i];
-            }
-
-            openSet.Remove(current);
+            PathNode<T> current = openSet.RemoveFirst();
             closedSet.Add(current);
 
             if (current == targetNode)
                 return RetracePath(startNode, targetNode);
 
-            foreach (PathNode<T> neighbor in GetNeighbours(current))
+            if (includeDiagonals)
+                neighbors = GetNeighboursDiag(current);
+            else
+                neighbors = GetNeighbours(current);
+
+            foreach (PathNode<T> neighbor in neighbors)
             {
                 if (!neighbor.walkable || closedSet.Contains(neighbor))
                     continue;

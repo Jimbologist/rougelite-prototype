@@ -32,7 +32,17 @@ public class LevelGenerator : Singleton<LevelGenerator>
     public Vector2Int RoomSpawnPos { get; private set; }
     //Map of rooms in given floor. Z-axis dictates subfloor. Large rooms occupy multiple positions
     public Dictionary<Vector3Int, RoomBase> LevelMap { get; private set; }
-    public List<RoomBase> DeadEnds { get; private set; }
+    public List<RoomBase> DeadEnds
+    {
+        get
+        {
+            List<RoomBase> deadEnds = new List<RoomBase>();
+            foreach (var room in LevelMap.Values)
+                if (room.IsDeadEnd) deadEnds.Add(room);
+
+            return deadEnds;
+        }
+    }
 
     //MinRooms = Ceil(7 * sqrt(floorNum))
     public uint MinRooms { get { return (uint)Mathf.CeilToInt(Floor.BASE_MIN_ROOMS * Mathf.Sqrt(floorNum)); } }
@@ -48,8 +58,13 @@ public class LevelGenerator : Singleton<LevelGenerator>
     {
         //TODO: Use new abc values and seed from GameManager later!
         LevelRNG = new SeedRandom();
+        //LevelRNG.SetSeed(1592834287);
+        //LevelRNG.SetSeed(1592838565);
+        //LevelRNG.SetSeed(1592852066);
+        //LevelRNG.SetSeed(1592922363);
+        //LevelRNG.SetSeed(1592936793);
+        Debug.Log(LevelRNG.State);
         LevelMap = new Dictionary<Vector3Int, RoomBase>();
-        DeadEnds = new List<RoomBase>();
         RoomSpawnPos = Vector2Int.zero;
 
         //Right now starts at 1 and increases each scene transition.
@@ -107,7 +122,7 @@ public class LevelGenerator : Singleton<LevelGenerator>
     {
         yield return new WaitForSeconds(1.5f);
         //Start will always be at 0,0,0 for now on map (subject to change)
-        RoomBase currRoom;
+        RoomBase currRoom = null;
         Vector3Int currPos = new Vector3Int(0, 0, 0);
 
         //Get and spawn a start room before random generation.
@@ -152,18 +167,17 @@ public class LevelGenerator : Singleton<LevelGenerator>
         foreach (var room in LevelMap.Values)
         {
             yield return null;
-            if(room.neighbors.Count < 2)
+            if(room.Neighbors.Count < 2)
             {
-                room.isDeadEnd = true;
                 DeadEnds.Add(room);
             }
         }
-        LoadRooms();
+        StartCoroutine(LoadRooms());
     }
 
     //Loads all rooms on current floor given certain conditions; you should disable all
     // non-neighbors after calling this method!
-    private void LoadRooms()
+    private IEnumerator LoadRooms()
     {
         List<RoomData> roomDiff;
         //Temp list of doors made to prevent duplicating valid doors!
@@ -174,82 +188,104 @@ public class LevelGenerator : Singleton<LevelGenerator>
         {
             //if (roomPos.Value.isDeadEnd)
             //  continue;
-            if (roomPos.Value.Data == null)
+            //Spawn doors at each unloaded neighbor. Layout not accounting for this yet.
+            foreach (var neighbor in roomPos.Value.Neighbors)
             {
-                //Spawn doors at each unloaded neighbor. Layout not accounting for this yet.
-                foreach (var neighbor in roomPos.Value.neighbors)
-                {
-                    if (!LevelMap[neighbor].isPosFinal)
-                        continue;
+                if (!LevelMap[neighbor].isPosFinal)
+                    continue;
 
-                    //Check if door already exists by seeing if one already references
-                    //the same two rooms being check now. Bool is to continue to next neighbor
-                    //only if conditions inside nested loop are met!
-                    bool isNewDoor = true;
-                    foreach (var door in LevelMap[neighbor].doors)
-                    {
-                        //Check if door already exists by seeing if one already references
-                        //the same two rooms being check now.
-                        if (door.Neighbor1 == neighbor && door.Neighbor2 == roomPos.Key)
-                            isNewDoor = false;
-                        if (door.Neighbor2 == neighbor && door.Neighbor1 == roomPos.Key)
-                            isNewDoor = false;
-                    }
-                    if (!isNewDoor)
-                    {
-                        continue;
-                    }
-
-                    GameObject doorObj = new GameObject(string.Format("Room_{0}_Door_{1}", roomPos.ToString(), roomPos.Value.doors.Count));
-                    DoorBase newDoor = doorObj.AddComponent<DoorBase>();
-                    newDoor.SpawnDoor(roomPos.Key, neighbor);
-                }
+                CreateDoorObj(roomPos.Key, neighbor);
             }
-            
-            //Finally, load room now that doors and layout are valid!
         }
 
         //All doors are spawned, now can verify layouts. Loops through
         // all doors and verify that the layout allows access to all neighbors;
         // if layout is invalid, re-roll the room until valid one is found.
-        
-        foreach (var roomPos in LevelMap)
+
+        var mapCopy = new Dictionary<Vector3Int, RoomBase>(LevelMap);
+        foreach (var roomPos in mapCopy)
         {
+            if (roomPos.Value.isLoaded || roomPos.Value.flaggedToDestroy)
+                continue;
+
             //For testing, only grabs data from easy rooms!!
             //TODO: Randomly grab rooms from correct difficulty lists for normal rooms!
             roomDiff = Floor.EasyRooms;
             if (roomPos.Value == start) roomDiff = Floor.StartRooms;
             RoomData normRoomData = null;
+
             //Get a new layout for a room that allows all neighbors and doors created
             //to be accessible. A path should be available from each door to each other door!
-            bool validLayout = false;
-            while (!validLayout)
+            while (true)
             {
                 normRoomData = roomDiff[Mathf.Abs(LevelRNG.Rand32S()) % roomDiff.Count];
                 roomPos.Value.SetRoomData(normRoomData);
-                if (roomPos.Value.neighbors.Count == 1)
-                {
-                    //Check if 2x2 area in front of door can be walked on.
-                    //Also only 1 door since dead end, so check index 0.
-                    if (roomPos.Value.SpaceNearDoorWalkable(0))
-                    {
-                        validLayout = true;
-                        Debug.Log("Dead end's only door is free!");
-                    }
-                }
-                else if (roomPos.Value.CanPathFindToDoors())
-                {
-                    validLayout = true;
-                    Debug.Log("Path found!");
-                }
-                else
-                    Debug.Log("Re-rolling room!");
+
+                if (VerifyLayout(roomPos.Value))
+                    break;
             }
             roomPos.Value.LoadRoom();
+            yield return null;
         }
 
         //TODO: For each dead end, get special rooms in a pre-determined order
         // for necessary ones and then random order for other kinds!!
+    }
+
+    private bool VerifyLayout(RoomBase room)
+    {
+        //Check if size is valid. If it is, neighbors automatically updated.
+        if (!room.VerifyLayoutSize())
+        {
+            //Debug.Log(room.gameObject.name + " could not fit!");
+            return false;
+        }
+
+        //Check if 2x2 area in front of door can be walked on.
+        //Also only 1 door since dead end, so check index 0.
+        if (room.IsDeadEnd)
+        {
+            Debug.Log("Dead end found " + room.gameObject.name);
+            if (room.SpaceNearDoorWalkable(0))
+                return true;
+        }
+        else if (room.CanPathFindToDoors())
+        {
+            Debug.Log("Pathfinding successful in " + room.gameObject.name);
+            return true;
+        }
+
+        room.RefreshRoom();
+        return false;
+    }
+
+    //Tries to placed a door object between two rooms. If one already exists, returns the existing door.
+    //If not, place the new door and return the new instance.
+    public DoorBase CreateDoorObj(Vector3Int currRoom, Vector3Int neighbor)
+    {
+        if (!LevelMap.ContainsKey(currRoom) || !LevelMap.ContainsKey(neighbor))
+            return null;
+
+        //Check if door already exists by seeing if one already references
+        //the same two rooms being check now. Bool is to continue to next neighbor
+        //only if conditions inside nested loop are met!
+        foreach (var door in LevelMap[neighbor].Doors)
+        {
+            if (!door.IsDoorAvailable(neighbor, currRoom))
+            {
+                return door;
+            }
+        }
+
+        GameObject doorObj = new GameObject(string.Format("Room_{0}_Door_{1}", currRoom.ToString(), LevelMap[currRoom].Doors.Count));
+        DoorBase newDoor = doorObj.AddComponent<DoorBase>();
+        newDoor.SpawnDoor(currRoom, neighbor);
+
+        //Add door to rooms' lists of doors; set references to neighbors
+        //and subscribe to RoomClear event so door will open on clear.
+        LevelMap[currRoom].TryAddDoor(newDoor);
+        LevelMap[neighbor].TryAddDoor(newDoor);
+        return newDoor;
     }
 
     private List<RoomData> GetStandardRoomList()
@@ -265,4 +301,29 @@ public class LevelGenerator : Singleton<LevelGenerator>
             return Floor.EasyRooms;
     }
 
+    //Check if there are any dead ends near this potential sector to
+    //add as an extenstion for a larger room. extension = larger room extending from.
+    //Certain special rooms at dead ends can only have 1 neighbor, so this ensures
+    //large rooms won't break that.
+    public bool CanExtendSector(Vector3Int sector, RoomBase extension)
+    {
+        RoomBase neighbor = null;
+
+        for(int x = -1; x <= 1; x++)
+        {
+            for(int y = -1; y <= 1; y++)
+            {
+                if (x != 0 && y != 0) continue;
+                Vector3Int neighborDir = new Vector3Int(x, y, 0);
+                if (LevelMap.TryGetValue(sector + neighborDir, out neighbor))
+                {
+                    if (extension == neighbor)
+                        continue;
+                    if (neighbor.IsDeadEnd || neighbor.isLoaded)
+                        return false;
+                }
+            }
+        }
+        return true;
+    }
 }
