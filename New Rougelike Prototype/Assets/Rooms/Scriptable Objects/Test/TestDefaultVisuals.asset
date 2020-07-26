@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46a822478cc372940adf9848485fc19c, type: 3}
+  m_Name: TestDefaultVisuals
+  m_EditorClassIdentifier: 
+  wallTile: {fileID: 11400000, guid: e725b6ce4e79d044d9c1e4bb06604ea4, type: 2}
+  floorTile: {fileID: 11400000, guid: 4568c65d3fb6ddd4ab3cb2f6e8f58482, type: 2}
+  boundTile: {fileID: 11400000, guid: b5211af1223dfe54d937dd42b1037573, type: 2}
+  specialDoorSprites: []

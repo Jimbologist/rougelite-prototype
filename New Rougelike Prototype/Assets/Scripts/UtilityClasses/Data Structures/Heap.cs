@@ -11,14 +11,14 @@ using UnityEngine;
 //Basically, I'm too lazy to make a Heap class that works for any type. Fuck that.
 //I just want some good ass pathfinding, and that's likely the only thing in this
 //entire game that needs a priority queue to be optimized. I know it's lazy fuck you.
-public class PathHeap<T> where T : IHeapItem<T>
+public class Heap<T> where T : IHeapItem<T>
 {
     T[] items;
     int currentItemCount;
 
     public int Count { get { return currentItemCount; } }
 
-    public PathHeap(int maxSize)
+    public Heap(int maxSize)
     {
         items = new T[maxSize];
     }

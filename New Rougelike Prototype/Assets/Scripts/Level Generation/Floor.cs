@@ -6,8 +6,9 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Floor")]
 public class Floor : ScriptableObject
 {
-    public const uint BASE_MIN_ROOMS = 8;
+    public const uint BASE_MIN_ROOMS = 2;
 
+    [Header("Rooms")]
     //All rooms for floor. Only add room datas through editor.
     [SerializeField] private List<RoomData> startRooms = new List<RoomData>();
     [SerializeField] private List<RoomData> easyRooms = new List<RoomData>();
@@ -15,11 +16,13 @@ public class Floor : ScriptableObject
     [SerializeField] private List<RoomData> hardRooms = new List<RoomData>();
     [SerializeField] private List<RoomData> extremeRooms = new List<RoomData>();
 
-    [SerializeField] private RuleTile[] wallTiles;
-    [SerializeField] private RuleTile[] floorTiles;
-    [SerializeField] private RuleTile[] boundTiles;
+    [Header("Visuals")]
+    //If multiple types of doors, should match with wallTiles!
+    [SerializeField] private Sprite[] doorSprites = new Sprite[2];
+    [SerializeField] private List<RoomDeco> roomVisuals = new List<RoomDeco>();
+
+    [Header("Floor Specifications")]
     //Indeces should correspond to DoorBase.DoorDirection enum!
-    [SerializeField] private Sprite[] doorSprites;       //If multiple types of doors, should match with wallTiles!
     [SerializeField] private byte floorID = 0;
     [SerializeField] private byte extraDeadEnds = 0;    //Any floor-specific rooms that require dead ends.
 
@@ -28,10 +31,7 @@ public class Floor : ScriptableObject
     public List<RoomData> MediumRooms { get => mediumRooms; }
     public List<RoomData> HardRooms { get => hardRooms; }
     public List<RoomData> ExtremeRooms { get => extremeRooms; }
-
-    public RuleTile[] WallTiles { get => wallTiles; }
-    public RuleTile[] FloorTiles { get => floorTiles; }
-    public RuleTile[] BoundTiles { get => boundTiles; }
+    public List<RoomDeco> RoomVisuals { get => roomVisuals; }
     public Sprite[] DoorSprites { get => doorSprites; }
     public uint FloorID { get { return floorID; } }
 }

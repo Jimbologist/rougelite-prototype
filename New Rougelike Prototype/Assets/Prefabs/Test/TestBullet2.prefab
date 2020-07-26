@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3494618119154865028}
   - component: {fileID: 8525250524668959749}
   - component: {fileID: -8016796341175934158}
+  - component: {fileID: 3443585935398410887}
   m_Layer: 0
   m_Name: TestBullet2
   m_TagString: Untagged
@@ -71,7 +72,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_Sprite: {fileID: 21300000, guid: 441a4456b0807ca4abde7b1526393da3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -95,8 +96,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d136c1b3706cda741abd10ec0cee0933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  weapon: {fileID: 0}
   bulletRB: {fileID: 0}
   bulletDir: {x: 0, y: 0}
+  rotateBulletWithAim: 1
 --- !u!50 &-8016796341175934158
 Rigidbody2D:
   serializedVersion: 4
@@ -105,7 +108,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7206437421351589332}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -116,5 +119,38 @@ Rigidbody2D:
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 0
+--- !u!60 &3443585935398410887
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7206437421351589332}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 0.5, y: 0.28125}
+    newSize: {x: 0.16, y: 0.09}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: -0.23671305, y: 0.12543997}
+      - {x: -0.23671314, y: -0.12543997}
+      - {x: 0.14662108, y: -0.12354188}
+      - {x: 0.16268617, y: -0.107476875}
+      - {x: 0.23564935, y: -0.031396136}
+      - {x: 0.23671305, y: 0.032538842}
+      - {x: 0.1702787, y: 0.10557875}
+      - {x: 0.15041739, y: 0.12543999}

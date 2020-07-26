@@ -7,7 +7,7 @@ using UnityEngine;
 //  Ability to be placed in inventory/backpack and equipped,
 //  Values that all gear will have, such as sellPrice and premSellPrice,
 //  strings for full name and base name, etc.
-public abstract class Lootable : MonoBehaviour, IInteractable
+public abstract class Lootable : MonoBehaviour, IInteractable, IFakeHeight
 {
     [SerializeField] private Rarity rarity;
     [SerializeField] private string baseName;
@@ -19,6 +19,14 @@ public abstract class Lootable : MonoBehaviour, IInteractable
     public int SellPrice { get => sellPrice; }
     public int PremSellPrice { get => premSellPrice; }
     public Rarity Rarity {  get { return rarity;  } }
+    public FakeHeightObject FakeHeight { get; set; }
+
+    /**
+     * Monobehaviour methods
+     */
+    protected virtual void Awake()
+    {
+    }
 
     /**
      * UI abstract methods; Derived classes must implement these to function w/ UI.
@@ -28,4 +36,10 @@ public abstract class Lootable : MonoBehaviour, IInteractable
     public abstract string GetTooltipStatsText();
 
     public abstract string GetTooltipNotesText();
+
+    public abstract void OnFakeHeightTriggerEnter(Collider2D collider);
+
+    public abstract void OnFakeHeightTriggerExit(Collider2D collider);
+
+    public abstract void OnFakeHeightTriggerStay(Collider2D collider);
 }

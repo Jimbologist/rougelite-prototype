@@ -128,7 +128,7 @@ public class PathGrid<T>
         PathNode<T> targetNode = NodeFromWorldPoint(targetPos);
 
         List<PathNode<T>> neighbors;
-        PathHeap<PathNode<T>> openSet = new PathHeap<PathNode<T>>(GridArea);
+        Heap<PathNode<T>> openSet = new Heap<PathNode<T>>(GridArea);
         HashSet<PathNode<T>> closedSet = new HashSet<PathNode<T>>();
         openSet.Add(startNode);
 

@@ -10,7 +10,8 @@ using UnityEngine;
  */
 //This script stores all player's control events and methods, among other attributes, like animators
 //Acts as the main script for the player, as control is the most important. Coupled with PlayerStats and PlayerInventory.
-public class PlayerControl : MonoBehaviour
+[RequireComponent(typeof(FakeHeightObject))]
+public class PlayerControl : MonoBehaviour, IFakeHeight
 { 
     [SerializeField] private bool hasWeapons;
 
@@ -32,8 +33,7 @@ public class PlayerControl : MonoBehaviour
     [SerializeField] private Vector2 screenMousePosition;
 
     [SerializeField] private Vector2 movement;
-    public Vector2 Movement { get => movement; }
-
+    
     //References to separate player scripts:
     //This player's current inventory and stats
     [SerializeField] private PlayerInventory pInventory;
@@ -49,6 +49,11 @@ public class PlayerControl : MonoBehaviour
     //Events
     public event Action<IInteractable> playerInteraction;
 
+    public Collider2D MainCollider { get; private set; }
+    public Vector2 Movement { get => movement; }
+    public FakeHeightObject FakeHeight { get; set; }
+    public Vector2 LastValidPosition { get; private set; }
+
     /**
      * UNITY ENGINE FUNCTIONS RELATING TO SCENE
      */
@@ -60,6 +65,7 @@ public class PlayerControl : MonoBehaviour
         //Assign references to important variables and objects w/o inspector.
         pInventory = GetComponentInChildren<PlayerInventory>();
         pStats = GetComponentInChildren<PlayerStats>();
+
         //TODO: Instantiate new crosshair instead of finding one in the scene; make it UI based later...
         crosshair = FindObjectOfType<Crosshair>();
         pActions = new PlayerActions();
@@ -73,6 +79,7 @@ public class PlayerControl : MonoBehaviour
         rightHand = hands.Find("rightHand").gameObject;
 
         pSpriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        MainCollider = GetComponent<Collider2D>();
 
         //Aim transfrom -> position for aimed weapon to rotate around.
         //weaponPosition -> child position of aimTransform where current weapon is instantiated.
@@ -80,14 +87,13 @@ public class PlayerControl : MonoBehaviour
         weaponPosition = aimTransform.Find("gunSlot");
 
         rb2d = gameObject.transform.GetComponent<Rigidbody2D>();
-        
 
         //Subscribe respective variables or functions to PlayerActions control events.
         pActions.MainActions.Aim.performed += ctx => screenMousePosition = ctx.ReadValue<Vector2>();
         pActions.MainActions.Interact.performed += ctx => CheckInteractables();
         pActions.MainActions.SwapWeapon.performed += ctx => CheckWeaponSwap();
         pActions.MainActions.Attack.performed += ctx => WeaponAttack();
-        pActions.MainActions.Move.performed += ctx => Move();
+        //pActions.MainActions.Move.performed += ctx => Move();
 
     }
     private void Update()
@@ -97,6 +103,7 @@ public class PlayerControl : MonoBehaviour
         //Set mouse position in 3d gameworld to mouse position on screen, then set z to zero.
         Vector3 worldMousePosition = mainCamera.ScreenToWorldPoint(screenMousePosition);
         worldMousePosition.z = 0f;
+
 
         //If crosshair found in scene, set its position to worldMousePosition.
         if(crosshair != null)
@@ -125,9 +132,7 @@ public class PlayerControl : MonoBehaviour
 
     private void FixedUpdate()
     {
-        //Move player based on movement vector changed in Move()
-        movement = pActions.MainActions.Move.ReadValue<Vector2>();
-        rb2d.MovePosition(rb2d.position + movement * pStats.ChangeMoveSpeed(0) * Time.fixedDeltaTime);
+        Move();
     }
 
     //Called when object is ENABLED in scene.
@@ -167,8 +172,6 @@ public class PlayerControl : MonoBehaviour
         rightHand.SetActive(currWeapon.RightHandPivot == null);
         leftHand.SetActive(currWeapon.LeftHandPivot == null);
 
-
-
         currWeapon.Equip(this);
     }
     
@@ -180,13 +183,15 @@ public class PlayerControl : MonoBehaviour
      * the Player's animator state machine.
      */
 
+        
     //Up, Down, Left, and Right Movement.
     protected virtual void Move()
     {
         //Read vector 2 from PlayerActions input system as normalized vector.
         movement = pActions.MainActions.Move.ReadValue<Vector2>().normalized;
+        rb2d.MovePosition(rb2d.position + movement * pStats.ChangeMoveSpeed(0) * Time.deltaTime);
     }
-
+    
     //Cycles through weapons in order in weapon inventory
     //MAY LATER have functionality for 1-4 keys and/or scroll wheel equipping.
     protected virtual void CheckWeaponSwap()
@@ -245,31 +250,48 @@ public class PlayerControl : MonoBehaviour
         if(currWeapon != null)
         {
             float shotSpeedMultiplier = pStats.ChangeShotSpeed(0f);
-            currWeapon.FireWeapon(shotSpeedMultiplier, crosshair.transform.position, gameObject.transform.position);
+            currWeapon.FireWeapon(shotSpeedMultiplier, crosshair.transform.position);
         }
     }
 
-    /**
-     * PLAYER COLLISION AND TRIGGER METHODS FROM UNITY ENGINE.
-     */
-
-    //2D COLLSION
-    protected virtual void OnTriggerEnter2D (Collider2D collision)
+    public PlayerStats GetPlayerStats()
     {
-        if (collision.gameObject.GetComponent<IInteractable>() != null)
+        return pStats;
+    }
+
+    /**
+     * TRIGGER METHODS FROM IFAKEHEIGHT.
+     */
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        
+    }
+
+    public void OnCollisionExit2D(Collision2D collision)
+    {
+
+    }
+
+    public void OnCollisionStay2D(Collision2D collision)
+    {
+        
+    }
+
+    public void OnFakeHeightTriggerEnter(Collider2D collider)
+    {
+        if (collider.gameObject.GetComponent<IInteractable>() != null)
         {
-            IInteractable interactable = collision.gameObject.GetComponent<IInteractable>();
+            IInteractable interactable = collider.gameObject.GetComponent<IInteractable>();
             Debug.Log("Player interaction. Press E to use.");
             pInventory.AddInteractable(interactable);
         }
     }
 
-
-    protected virtual void OnTriggerExit2D (Collider2D collision)
+    public void OnFakeHeightTriggerExit(Collider2D collider)
     {
-        if (collision.gameObject.GetComponent<IInteractable>() != null)
+        if (collider.gameObject.GetComponent<IInteractable>() != null)
         {
-            IInteractable interactable = collision.gameObject.GetComponent<IInteractable>();
+            IInteractable interactable = collider.gameObject.GetComponent<IInteractable>();
             if (interactable is Lootable && interactable == pInventory.GetCurrInteractable())
             {
                 if (TooltipPopup.GetTooltipObject().activeSelf)
@@ -279,12 +301,12 @@ public class PlayerControl : MonoBehaviour
         }
     }
 
-    protected virtual void OnTriggerStay2D (Collider2D collision)
+    public void OnFakeHeightTriggerStay(Collider2D collider)
     {
-        if (collision.gameObject.GetComponent<IInteractable>() != null)
+        if (collider.gameObject.GetComponent<IInteractable>() != null)
         {
-            IInteractable interactable = collision.gameObject.GetComponent<IInteractable>();
-            if(interactable == pInventory.GetCurrInteractable())
+            IInteractable interactable = collider.gameObject.GetComponent<IInteractable>();
+            if (interactable == pInventory.GetCurrInteractable())
             {
                 if (interactable is Lootable && !TooltipPopup.GetTooltipObject().activeSelf)
                 {
@@ -292,13 +314,5 @@ public class PlayerControl : MonoBehaviour
                 }
             }
         }
-    }
-
-    /**
-     * PUBLIC METHODS FOR OTHER SCRIPTS TO ACCESS
-     */
-    public PlayerStats GetPlayerStats()
-    {
-        return pStats;
     }
 }

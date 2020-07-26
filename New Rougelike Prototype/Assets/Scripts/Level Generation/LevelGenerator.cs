@@ -28,6 +28,7 @@ public class LevelGenerator : Singleton<LevelGenerator>
     public Tilemap WallsTilemap { get => _wallsTilemap; }
     public Tilemap ObjectTilemap { get => _objectTilemap; }
     public Tilemap FloorTilemap { get => _floorTilemap; }
+    public Collider2D WallsTilemapCollider { get; private set; }
     public SeedRandom LevelRNG { get; private set; }
     public Vector2Int RoomSpawnPos { get; private set; }
     //Map of rooms in given floor. Z-axis dictates subfloor. Large rooms occupy multiple positions
@@ -56,6 +57,8 @@ public class LevelGenerator : Singleton<LevelGenerator>
 
     protected override void Awake()
     {
+        WallsTilemapCollider = WallsTilemap.GetComponent<TilemapCollider2D>();
+
         //TODO: Use new abc values and seed from GameManager later!
         LevelRNG = new SeedRandom();
         //LevelRNG.SetSeed(1592834287);
@@ -70,7 +73,6 @@ public class LevelGenerator : Singleton<LevelGenerator>
         //Right now starts at 1 and increases each scene transition.
         // later will get num from GameManager, which contains temp save information of current run!
         floorNum = 1;
-
 
         StartCoroutine(GenerateMap());
     }
@@ -245,13 +247,13 @@ public class LevelGenerator : Singleton<LevelGenerator>
         //Also only 1 door since dead end, so check index 0.
         if (room.IsDeadEnd)
         {
-            Debug.Log("Dead end found " + room.gameObject.name);
+            //Debug.Log("Dead end found " + room.gameObject.name);
             if (room.SpaceNearDoorWalkable(0))
                 return true;
         }
         else if (room.CanPathFindToDoors())
         {
-            Debug.Log("Pathfinding successful in " + room.gameObject.name);
+            //Debug.Log("Pathfinding successful in " + room.gameObject.name);
             return true;
         }
 

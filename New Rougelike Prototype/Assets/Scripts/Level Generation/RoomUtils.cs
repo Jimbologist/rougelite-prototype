@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public static class RoomUtils
 {
@@ -49,5 +51,97 @@ public static class RoomUtils
     public static bool MatchRGBA(Color tileColor, string baseString)
     {
         return (ColorUtility.ToHtmlStringRGBA(tileColor) == baseString);
+    }
+
+    public static int GetIndexFromColorOpacity(Color tileColor)
+    {
+        string colorStr = ColorUtility.ToHtmlStringRGBA(tileColor);
+        
+        colorStr = colorStr.Remove(0, colorStr.Length - 2);
+        return (255 - Convert.ToInt32(colorStr, 16));
+    }
+
+    //String must already be converted to RGBA using ColorUtility.
+    public static int GetIndexFromColorOpacity(string colorStr)
+    {
+        colorStr = colorStr.Remove(0, colorStr.Length - 2);
+        //Debug.Log(colorStr + " converts to index " + (255 - Convert.ToInt32(colorStr, 16)));
+        return (255 - Convert.ToInt32(colorStr, 16));
+    }
+
+    public static RuleTile GetLevelWallTile(Color tileColor)
+    {
+        int index = GetIndexFromColorOpacity(tileColor);
+        return LevelGenerator.Instance.Floor.RoomVisuals[index].WallTile;
+    }
+
+    public static RuleTile GetLevelWallTile(string colorStr)
+    {
+        int index = GetIndexFromColorOpacity(colorStr);
+        return LevelGenerator.Instance.Floor.RoomVisuals[index].WallTile;
+    }
+
+    public static RuleTile GetLevelWallTile(int index)
+    {
+        return LevelGenerator.Instance.Floor.RoomVisuals[index].WallTile;
+    }
+
+    public static RuleTile GetLevelFloorTile(Color tileColor)
+    {
+        int index = GetIndexFromColorOpacity(tileColor);
+        return LevelGenerator.Instance.Floor.RoomVisuals[index].FloorTile;
+    }
+
+    public static RuleTile GetLevelFloorTile(string colorStr)
+    {
+        int index = GetIndexFromColorOpacity(colorStr);
+        return LevelGenerator.Instance.Floor.RoomVisuals[index].FloorTile;
+    }
+
+    public static RuleTile GetLevelFloorTile(int index)
+    {
+        return LevelGenerator.Instance.Floor.RoomVisuals[index].FloorTile;
+    }
+
+    public static RuleTile GetLevelBoundTile(Color tileColor)
+    {
+        int index = GetIndexFromColorOpacity(tileColor);
+        return LevelGenerator.Instance.Floor.RoomVisuals[index].BoundTile;
+    }
+
+    public static RuleTile GetLevelBoundTile(string colorStr)
+    {
+        int index = GetIndexFromColorOpacity(colorStr);
+        return LevelGenerator.Instance.Floor.RoomVisuals[index].BoundTile;
+    }
+
+    public static RuleTile GetLevelBoundTile(int index)
+    {
+        return LevelGenerator.Instance.Floor.RoomVisuals[index].BoundTile;
+    }
+
+    //Integer parameter should be either 1 or 0, based on DoorBase.DoorDirection enum
+    public static Sprite GetLevelDoorSprite(DoorBase.DoorDirection directionIndex)
+    {
+        return LevelGenerator.Instance.Floor.DoorSprites[(int)directionIndex];
+    }
+
+    public static int GetIndexFromTile(TileBase tile)
+    {
+        if (tile == null)
+            Debug.Log("tile is null you fuck");
+        int count = 0;
+        foreach(var visual in LevelGenerator.Instance.Floor.RoomVisuals)
+        {
+            if (visual.BoundTile == tile)
+                return count;
+            if (visual.WallTile == tile)
+                return count;
+            if (visual.FloorTile == tile)
+                return count;
+            count++;
+        }
+
+        return -1;
     }
 }

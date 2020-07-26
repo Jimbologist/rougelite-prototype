@@ -11,8 +11,8 @@ public class DoorBase : MonoBehaviour
     //Integer for enum corresponds to index for sprite in array of door sprites to use!
     public enum DoorDirection
     {
-        Vertical = 1,
-        Horizontal = 0
+        Horizontal = 0,
+        Vertical = 1
     }
 
     protected readonly Vector2 BaseHorizSize = new Vector2(2, 2);
@@ -156,9 +156,9 @@ public class DoorBase : MonoBehaviour
 
         //TODO: Get index of wall/bound sprites from function in Floor script (not built yet)
         // use that same index and multiply by face direction.
-        int roomDesignIndex = 0;
+
         //Also there will definetely always be 2 sprite types, so fuck chaching them or getting enum length.
-        _renderer.sprite = LevelGenerator.Instance.Floor.DoorSprites[(int)_faceDirection + (2 * roomDesignIndex)];
+        _renderer.sprite = RoomUtils.GetLevelDoorSprite(_faceDirection);
 
         this.OpenDoor();
     }
@@ -196,7 +196,7 @@ public class DoorBase : MonoBehaviour
 
     public virtual void ShutDoor()
     {
-        if (!isOpen)
+        if (!isOpen || _collider == null)
             return;
         isOpen = false;
 

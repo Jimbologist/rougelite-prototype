@@ -13,8 +13,10 @@ public class RoomData : ScriptableObject
 {
     [SerializeField] private Texture2D roomLayout = null;
     [SerializeField] private string roomName;
+    [SerializeField] private RoomDeco decoration;
 
     public Texture2D Layout { get { return roomLayout; } }
+    public RoomDeco Decoration { get { return decoration; } }
     public string RoomName { get { return roomName; } }
     public int NumSectorsX 
     {

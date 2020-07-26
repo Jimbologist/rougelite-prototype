@@ -27,14 +27,10 @@ MonoBehaviour:
   mediumRooms: []
   hardRooms: []
   extremeRooms: []
-  wallTiles:
-  - {fileID: 11400000, guid: e725b6ce4e79d044d9c1e4bb06604ea4, type: 2}
-  floorTiles:
-  - {fileID: 11400000, guid: 4568c65d3fb6ddd4ab3cb2f6e8f58482, type: 2}
-  boundTiles:
-  - {fileID: 11400000, guid: b5211af1223dfe54d937dd42b1037573, type: 2}
   doorSprites:
   - {fileID: 21300000, guid: 536493a1d2f3953458f20c458af5f3a3, type: 3}
   - {fileID: 21300000, guid: 5a98cad706738bf469d80997a4a40dc9, type: 3}
+  roomVisuals:
+  - {fileID: 11400000, guid: 5e5920de23c8a4a44a904c986d3885a2, type: 2}
   floorID: 1
   extraDeadEnds: 0

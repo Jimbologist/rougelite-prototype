@@ -30,8 +30,8 @@ public class RoomBase : MonoBehaviour
     [SerializeField] private RoomState roomState;
     [SerializeField] private List<Vector3Int> serRoomSectors = new List<Vector3Int>();
 
-    private RoomData roomData;
     private PathGrid<GameObject> roomGrid;
+    private RoomData roomData;
     private int roomWidth;
     private int roomHeight;
 
@@ -573,14 +573,15 @@ public class RoomBase : MonoBehaviour
             {
                 for (int y = 0; y < roomData.Layout.height; y++)
                 {
-                    layoutGrid.GetNodeDirect(x, y).walkable = RoomUtils.IsSpaceFree(roomData.Layout.GetPixel(x, y));
+                    Color currPixel = roomData.Layout.GetPixel(x, y);
+                    layoutGrid.GetNodeDirect(x, y).walkable = RoomUtils.IsSpaceFree(currPixel);
 
                     if (showTiles)
                     {
                         if (layoutGrid.GetNodeDirect(x, y).walkable)
-                            test.SetTile(new Vector3Int(x, y, 0) + RoomOrigin, LevelGenerator.Instance.Floor.FloorTiles[0]);
+                            test.SetTile(new Vector3Int(x, y, 0) + RoomOrigin, RoomUtils.GetLevelFloorTile(currPixel));
                         else
-                            test.SetTile(new Vector3Int(x, y, 0) + RoomOrigin, LevelGenerator.Instance.Floor.BoundTiles[0]);
+                            test.SetTile(new Vector3Int(x, y, 0) + RoomOrigin, RoomUtils.GetLevelBoundTile(currPixel));
                     }
 
                     //test
@@ -624,7 +625,7 @@ public class RoomBase : MonoBehaviour
     public virtual bool SpaceNearDoorWalkable(int index)
     {
         Vector2Int[] doorPos = doors[index].GetLayoutDoorPos(this);
-        Debug.Log("Checked spaced near door in " + gameObject.name);
+        //Debug.Log("Checked spaced near door in " + gameObject.name);
         foreach (var pos in doorPos)
         {
             if (!RoomUtils.IsSpaceFree(roomData.Layout.GetPixel(pos.x, pos.y)))
@@ -719,11 +720,13 @@ public class RoomBase : MonoBehaviour
                 foreach(var pos in tempDoorPos)
                 {
                     Vector3Int newPos = new Vector3Int(pos.x, pos.y + 1, pos.z);
-                    LevelGenerator.Instance.WallsTilemap.SetTile(newPos, LevelGenerator.Instance.Floor.WallTiles[0]);
+                    
+                    int index = RoomUtils.GetIndexFromTile(LevelGenerator.Instance.FloorTilemap.GetTile(newPos));
+                    if (index == -1) continue;
+                    LevelGenerator.Instance.WallsTilemap.SetTile(newPos, RoomUtils.GetLevelWallTile(index));
                 }
             }
         }
-
 
         isLoaded = true;
     }
@@ -733,6 +736,8 @@ public class RoomBase : MonoBehaviour
         /* Check each tile in Texture2D layout from top to bottom for easier
            replacement of perspective tiles (ex. side view of wall) when scanning room 
         */
+
+        string baseWallWithOpacity = RoomUtils.BASE_WALL + "FF";
         for (int y = layout.height; y >= -1; y--)
         {
             for (int x = layout.width; x >= -1; x--)
@@ -741,14 +746,14 @@ public class RoomBase : MonoBehaviour
                 //Top two rows of map can only have a wall:
                 if (y == layout.height || y < 0)
                 {
-                    SpawnWallBound(RoomUtils.BASE_WALL, x, y);
+                    SpawnWallBound(baseWallWithOpacity, x, y);
                     continue;
                 }
 
                 //Very left and right columns should always be the room's base wall.
                 else if (x == layout.width || x < 0)
                 {
-                    SpawnWallBound(RoomUtils.BASE_WALL, x, y);
+                    SpawnWallBound(baseWallWithOpacity, x, y);
                     continue;
                 }
 
@@ -799,19 +804,17 @@ public class RoomBase : MonoBehaviour
     public virtual void SpawnWallBound(string colorHex, int x, int y)
     {
         RuleTile wallTile = null;
+        TileBase boundTile = RoomUtils.GetLevelBoundTile(colorHex);
+        int visualsIndex = RoomUtils.GetIndexFromColorOpacity(colorHex);
 
-        //Base wall value has full opacity (FF)
-        if (colorHex.EndsWith("FF") || colorHex == RoomUtils.BASE_WALL)
-        {
-            wallTileList.Add(LevelGenerator.Instance.Floor.BoundTiles[0]);
-            wallPosList.Add((new Vector3Int(x, y, 0)) + roomOrigin);
-        }
+        wallTileList.Add(boundTile);
+        wallPosList.Add((new Vector3Int(x, y, 0)) + roomOrigin);
 
 
         /*This is where other wall types MIGHT be checked later somehow.*/
 
         //Add floors under wall in case it is removed!
-        floorTileList.Add(LevelGenerator.Instance.Floor.FloorTiles[0]);
+        floorTileList.Add(RoomUtils.GetLevelFloorTile(visualsIndex));
         floorPosList.Add(new Vector3Int(x, y, 0) + roomOrigin);
 
         /*Validate placement of wall relative to other walls by checking if above tile(s)
@@ -844,7 +847,7 @@ public class RoomBase : MonoBehaviour
                 //If wall tile not already determined, make default wall.
                 //(may already be a boundary instead due to invalid placement).
                 if (wallTile == null)
-                    wallTile = LevelGenerator.Instance.Floor.WallTiles[0];
+                    wallTile = RoomUtils.GetLevelWallTile(visualsIndex);
 
                 Vector3Int tile1Down = new Vector3Int(x, y - 1, initialLocation.z);
                 Vector3Int tile2Down = new Vector3Int(x, y - 2, initialLocation.z);
@@ -856,9 +859,9 @@ public class RoomBase : MonoBehaviour
                 wallPosList.Add(roomOrigin + tile2Down);
 
                 //Place floor tiles under walls; hidden but there if wall is removed!
-                floorTileList.Add(LevelGenerator.Instance.Floor.FloorTiles[0]);
+                floorTileList.Add(RoomUtils.GetLevelFloorTile(visualsIndex));
                 floorPosList.Add(roomOrigin + tile1Down);
-                floorTileList.Add(LevelGenerator.Instance.Floor.FloorTiles[0]);
+                floorTileList.Add(RoomUtils.GetLevelFloorTile(visualsIndex));
                 floorPosList.Add(roomOrigin + tile2Down);
             }
         }
@@ -870,12 +873,8 @@ public class RoomBase : MonoBehaviour
     //Right now, only spawns base floor tiles.
     public virtual void SpawnFloor(string colorHex, int x, int y)
     {
-        //Base floor value has full opacity (FF)
-        if (colorHex.EndsWith("FF"))
-        {
-            floorTileList.Add(LevelGenerator.Instance.Floor.FloorTiles[0]);
-            floorPosList.Add(new Vector3Int(x, y, 0) + roomOrigin);
-        }
+        floorTileList.Add(RoomUtils.GetLevelFloorTile(colorHex));
+        floorPosList.Add(new Vector3Int(x, y, 0) + roomOrigin);
 
         //This is where other floor types will be checked later somehow.
     }
