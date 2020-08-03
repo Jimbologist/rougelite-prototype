@@ -30,6 +30,7 @@ public class LevelGenerator : Singleton<LevelGenerator>
     public Tilemap FloorTilemap { get => _floorTilemap; }
     public Collider2D WallsTilemapCollider { get; private set; }
     public SeedRandom LevelRNG { get; private set; }
+    public long RNGInitialValue { get; private set; }
     public Vector2Int RoomSpawnPos { get; private set; }
     //Map of rooms in given floor. Z-axis dictates subfloor. Large rooms occupy multiple positions
     public Dictionary<Vector3Int, RoomBase> LevelMap { get; private set; }
@@ -67,6 +68,8 @@ public class LevelGenerator : Singleton<LevelGenerator>
         //LevelRNG.SetSeed(1592922363);
         //LevelRNG.SetSeed(1592936793);
         Debug.Log(LevelRNG.State);
+        RNGInitialValue = LevelRNG.State;
+
         LevelMap = new Dictionary<Vector3Int, RoomBase>();
         RoomSpawnPos = Vector2Int.zero;
 
@@ -74,7 +77,8 @@ public class LevelGenerator : Singleton<LevelGenerator>
         // later will get num from GameManager, which contains temp save information of current run!
         floorNum = 1;
 
-        StartCoroutine(GenerateMap());
+        //StartCoroutine(GenerateMap());
+        GenerateMap();
     }
 
     // Start is called before the first frame update
@@ -120,9 +124,8 @@ public class LevelGenerator : Singleton<LevelGenerator>
     //Finally, deactivate every room excepts all of current room's neighbors (maybe in GameManager?)
 
     //Generates locations that rooms will have. No RoomData is collected yet.
-    public IEnumerator GenerateMap()
+    public void GenerateMap()
     {
-        yield return new WaitForSeconds(1.5f);
         //Start will always be at 0,0,0 for now on map (subject to change)
         RoomBase currRoom = null;
         Vector3Int currPos = new Vector3Int(0, 0, 0);
@@ -155,31 +158,29 @@ public class LevelGenerator : Singleton<LevelGenerator>
                 else
                     nextRoomDir.y = dirVal;
                 currPos += nextRoomDir;
-                yield return null;
             }
 
             currRoom = InitializeRoom(currPos, string.Format("Room_{0}", LevelMap.Count));
             LevelMap.Add(currPos, currRoom);
             currRoom.UpdateNeighbors();
-            yield return null;
         }
 
         //TODO: Find, then create more dead ends if there are currently not enough by branching
         // from a random room w/ 2 or 3 neighbors and creating one intentionally until a minimum is created.
         foreach (var room in LevelMap.Values)
         {
-            yield return null;
             if(room.Neighbors.Count < 2)
             {
                 DeadEnds.Add(room);
             }
         }
-        StartCoroutine(LoadRooms());
+        //StartCoroutine(LoadRooms());
+        LoadRooms();
     }
 
     //Loads all rooms on current floor given certain conditions; you should disable all
     // non-neighbors after calling this method!
-    private IEnumerator LoadRooms()
+    private void LoadRooms()
     {
         List<RoomData> roomDiff;
         //Temp list of doors made to prevent duplicating valid doors!
@@ -227,7 +228,6 @@ public class LevelGenerator : Singleton<LevelGenerator>
                     break;
             }
             roomPos.Value.LoadRoom();
-            yield return null;
         }
 
         //TODO: For each dead end, get special rooms in a pre-determined order

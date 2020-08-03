@@ -18,30 +18,54 @@ using UnityEngine;
  * to hard code each individual piece of data as constant, and we'll still be able to 
  * creaet specific code for the inherited methods AND assign values via the inspector
  * (for example, dragging and dropping the WeaponType ScriptableObjects).
+ * 
+ * Finally, no mechanic is planned to be able to copy modifiers due to Weapon Rarity and
+ * WeaponType restrictions. Only will be able to get new Modifiers specifically from Resources.Load,
+ * and each one will start with its default values, effects, and modifiers
  */
 public abstract class WeaponModifier : MonoBehaviour
 {
-    [SerializeField] private Weapon _appliedWeapon;
-    [SerializeField] private List<WeaponType> _applicableTypes;
-    [SerializeField] private List<StatModifier> _statModifiers;
-    [SerializeField] private WeaponModifierType _modifierType;
-    [SerializeField] private PlayerControl _equippedPlayer;
-    [SerializeField] private string _modifierDescription;
+    protected Weapon _appliedWeapon;
 
-    public List<WeaponType> ApplicableTypes { get => _applicableTypes; }
-    public WeaponModifierType ModifierType { get => _modifierType; }
+    //If weapon rarity and type doesn't match these lists, then don't apply modifier.
+    //However, if list is empty, all types apply!
+    [SerializeField] protected List<WeaponType> _applicableTypes;
+    [SerializeField] protected List<Rarity> _applicableRarities;
+    [SerializeField] protected List<StatModifier> _statModifiers;
+
+    [SerializeField] protected WeaponModifierType _modifierType;
+    [SerializeField] protected string _modifierDescription;
+    [SerializeField] protected string _modifierPrefix;
 
     //Helps for listening for certain actions/applying player stat upgrades!
-    public PlayerControl EquippedPlayer { get => _equippedPlayer; } 
+    public PlayerControl EquippedPlayer { get; set; }
+    public List<WeaponType> ApplicableTypes { get => _applicableTypes; }
+    public List<Rarity> ApplicableRarites { get => _applicableRarities; }
+    public List<StatModifier> StatModifiers { get => _statModifiers; }
+    public WeaponModifierType ModifierType { get => _modifierType; }
     public string ModifierDescription { get => _modifierDescription; }
+
+    protected void Awake()
+    {
+        Debug.Log("Weapon Modifiers Awoke!!!!");
+        ChacheStatModifiers();
+        foreach(var stat in StatModifiers)
+        {
+            stat.source = this;
+        }
+
+        _modifierDescription = GetDescription();
+    }
 
     //Adds modifier only if weapon type of given weapon is applicable.
     //return false if not.
-    public virtual bool AddModifier(Weapon newWeapon)
+    public virtual bool AddWeaponModifier(Weapon newWeapon)
     {
-        if (_applicableTypes.Contains(newWeapon.WeaponType))
+        if (IsWeaponTypeApplicable(newWeapon) && IsRarityApplicable(newWeapon))
         {
             _appliedWeapon = newWeapon;
+            _appliedWeapon.OnWeaponEquipped += ApplyEquipEffects;
+            _appliedWeapon.OnWeaponUnequipped += RemoveEquipEffects;
             newWeapon.WeaponModifiers.Add(this);
             newWeapon.WeaponModifiers.Sort(CompareTooltipPriority);
             return true;
@@ -50,9 +74,11 @@ public abstract class WeaponModifier : MonoBehaviour
     }
 
     //Removes modifier and weapon references from respective lists.
-    public virtual bool RemoveModifier(Weapon newWeapon)
+    public virtual bool RemoveWeaponModifier(Weapon newWeapon)
     {
         _appliedWeapon = null;
+        _appliedWeapon.OnWeaponEquipped -= ApplyEquipEffects;
+        _appliedWeapon.OnWeaponUnequipped -= RemoveEquipEffects;
         return (newWeapon.WeaponModifiers.Remove(this));
     }
 
@@ -65,7 +91,34 @@ public abstract class WeaponModifier : MonoBehaviour
         return 0;
     }
 
-    public abstract void ApplyMainEffects();
+    private bool IsRarityApplicable(Weapon newWeapon)
+    {
+        if (_applicableRarities.Count == 0) return true;
+        return (_applicableRarities.Contains(newWeapon.Rarity));
+    }
 
-    public abstract void RemoveMainEffects();
+    private bool IsWeaponTypeApplicable(Weapon newWeapon)
+    {
+        if (_applicableTypes.Count == 0) return true;
+        return (_applicableTypes.Contains(newWeapon.WeaponType));
+    }
+
+    //Apply effects/modifiers upon weapon creation.
+    public abstract void ApplyPermEffects();
+
+    //Remove ALL effects given from ApplyPermModifiers.
+    public abstract void RemovePermEffects();
+
+    //Main effects/modifiers to apply to weapon upon weapon creation.
+    public abstract void ApplyEquipEffects();
+    
+    //Remove main effects applied from ApplyMainEffects();
+    public abstract void RemoveEquipEffects();
+
+    //Add StatModifiers to list to allow source to be applied
+    protected abstract void ChacheStatModifiers();
+
+    //Generate the description string of the modifier. Preferably with
+    //StringBuilder and using ToString representations of all StatModifiers
+    public abstract string GetDescription();
 }

@@ -9,10 +9,13 @@ using UnityEngine;
 //  strings for full name and base name, etc.
 public abstract class Lootable : MonoBehaviour, IInteractable, IFakeHeight
 {
-    [SerializeField] private Rarity rarity;
-    [SerializeField] private string baseName;
-    [SerializeField] private int sellPrice;
-    [SerializeField] private int premSellPrice;
+    [Header("Lootable Info")]
+    [SerializeField] protected Rarity rarity;
+    [SerializeField] protected string baseName;
+    [SerializeField] protected string baseDescription;
+    [SerializeField] protected string flavorText;
+    [SerializeField] protected int sellPrice;
+    [SerializeField] protected int premSellPrice;
 
     //Getters for private fields declared above
     public string BaseName { get => baseName; }

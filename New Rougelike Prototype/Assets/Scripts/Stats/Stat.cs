@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Collections.ObjectModel;
@@ -26,7 +27,6 @@ public class Stat
     [SerializeField] protected float _finalValue;
     protected float _lastBaseValue = float.MinValue;
     protected bool _isDirty = true;
-    
 
     protected readonly List<StatModifier> _statModifiers;
     public readonly ReadOnlyCollection<StatModifier> StatModifiers;
@@ -64,10 +64,25 @@ public class Stat
         return false;
     }
 
+    public bool EditModifier(StatModifier mod, float newValue)
+    {
+        if (!_statModifiers.Contains(mod))
+            return false;
+
+        mod.SetModifierValue(newValue);
+        _isDirty = true;
+        return true;
+    }
+
     public bool RemoveAllModifiersFromSource(object source)
     {
         //Remove all items with same reference as source. Return true if any were removed.
         return _statModifiers.RemoveAll(statModifier => statModifier.source == source) > 0;
+    }
+
+    public List<StatModifier> GetModifiersFromSource(object source)
+    {
+        return _statModifiers.FindAll(statModifier => statModifier.source == source);
     }
 
     public void RemoveAllModifiers()
@@ -93,6 +108,8 @@ public class Stat
         {
             StatModifier mod = _statModifiers[i];
 
+            if (mod.Nullified) continue;
+
             switch (mod.type)
             {
                 case StatModType.Flat:
@@ -103,12 +120,12 @@ public class Stat
 
                     if (i + 1 >= _statModifiers.Count || _statModifiers[i + 1].type != StatModType.PercentAdd)
                     {
-                        finalValue *= 1 + sumPercentAdd;
+                        finalValue *= (1 + sumPercentAdd);
                         sumPercentAdd = 0;
                     }
                     break;
                 case StatModType.PercentMult:
-                    finalValue *= (1 + mod.value);
+                    finalValue *= mod.value;
                     break;
                 case StatModType.FlatEnd:
                     finalValue += mod.value;    //Still adds at end, since list is ordered to do these last.

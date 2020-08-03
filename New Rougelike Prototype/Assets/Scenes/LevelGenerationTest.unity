@@ -1046,26 +1046,56 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rarity: {fileID: 11400000, guid: 137ee42834ddbdd479a661d5d5f8d738, type: 2}
   baseName: The Other Test
+  baseDescription: 
+  flavorText: The second gun ever made
   sellPrice: 99
   premSellPrice: 1
-  fullName: The Other Test
-  flavorText: The second gun ever made
-  baseDamage: 13
-  baseAccuracy: 98.6
-  baseFireDelay: 0.35
-  baseReloadSpeed: 1.5
-  baseShotSpeed: 20
-  baseMagSize: 12
-  baseAmmoExpended: 1
+  damage:
+    baseValue: 0
+    _finalValue: 0
+  accuracy:
+    baseValue: 0
+    _finalValue: 0
+  fireDelay:
+    baseValue: 0
+    _finalValue: 0
+  reloadSpeed:
+    baseValue: 0
+    _finalValue: 0
+  shotSpeed:
+    baseValue: 0
+    _finalValue: 0
+  magSize:
+    baseValue: 0
+    _finalValue: 0
+  ammoExpended:
+    baseValue: 0
+    _finalValue: 0
   mainBullet: {fileID: 8525250524668959749, guid: 9fc95dc3cea676a4ab8abcc9379d060b,
     type: 3}
-  trueDamage: 13
-  trueAccuracy: 98.6
-  trueFireDelay: 0.35
-  trueReloadSpeed: 1.5
-  trueShotSpeed: 10
-  trueMagSize: 12
-  trueAmmoExpended: 1
+  weaponModifiers: []
+  weaponType: {fileID: 0}
+  trueDamage:
+    baseValue: 0
+    _finalValue: 0
+  trueAccuracy:
+    baseValue: 0
+    _finalValue: 0
+  trueFireDelay:
+    baseValue: 0
+    _finalValue: 0
+  trueReloadSpeed:
+    baseValue: 0
+    _finalValue: 0
+  trueShotSpeed:
+    baseValue: 0
+    _finalValue: 0
+  trueMagSize:
+    baseValue: 0
+    _finalValue: 0
+  trueAmmoExpended:
+    baseValue: 0
+    _finalValue: 0
   isEquipped: 0
   pickupBox: {fileID: 0}
   leftHandPivot: {fileID: 0}
@@ -2299,6 +2329,75 @@ MonoBehaviour:
   useCustomOpacity: 0
   height: 0
   customShadowSprite: {fileID: 0}
+--- !u!1001 &3146593255553918939
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 9.354057
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 7.323663
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -387.54852
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 416104958976711911, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8407853322681905253, guid: f1512460365cc66418d668ddf7fe10cc,
+        type: 3}
+      propertyPath: m_Name
+      value: GameObject
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f1512460365cc66418d668ddf7fe10cc, type: 3}
 --- !u!1001 &8870614279271453116
 PrefabInstance:
   m_ObjectHideFlags: 0

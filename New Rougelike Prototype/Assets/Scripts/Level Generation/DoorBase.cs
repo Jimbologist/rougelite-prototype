@@ -35,7 +35,7 @@ public class DoorBase : MonoBehaviour
     //Anyways, this event is called when entering a new room; passes Vector3Int
     //of the sector for the new room, and the player that entered it.
     //This allows Multiplayer to move the camera if the player that entered a room
-    //is the player it is following.
+    //is the player it is following(?)
     public event Action<Vector3Int, PlayerControl> OnNewRoomEntered;
 
     private void Awake()

@@ -17,9 +17,6 @@ public class Weapon : Lootable
     //Base stats for the weapon; only apply modifiers inherent
     //to the weapon instance itself to these (buffs, debuffs, rarity, etc.)
     [Header("Base Weapon Stats")]
-    [SerializeField] protected string baseName;
-    [SerializeField] protected string baseDescription;
-    [SerializeField] protected string flavorText;
     [SerializeField] protected Stat damage;
     [SerializeField] protected Stat accuracy;
     [SerializeField] protected Stat fireDelay;
@@ -61,7 +58,8 @@ public class Weapon : Lootable
     //Note: Automatically added to and sorted when using Add/Remove Modifier
     //methods on a WeaponModifier object.
     public List<WeaponModifier> WeaponModifiers { get => weaponModifiers; }
-        
+      
+    public SeedRandom WeaponRNG { get; private set; }
     public float BaseDamage { get => damage.FinalValue; }
     public float BaseAccuracy { get => accuracy.FinalValue; }
     public float BaseFireDelay { get => fireDelay.FinalValue; }
@@ -77,6 +75,12 @@ public class Weapon : Lootable
     public Stat TrueShotSpeed { get => trueShotSpeed; }
     public Stat TrueMagSize { get => trueMagSize; }
     public Stat TrueAmmoExpended { get => trueAmmoExpended; }
+
+    public delegate void WeaponEquipped();
+    public event WeaponEquipped OnWeaponEquipped;
+
+    public delegate void WeaponUnequipped();
+    public event WeaponUnequipped OnWeaponUnequipped;
 
     #region ModifierMethods
 
@@ -252,6 +256,19 @@ public class Weapon : Lootable
 
         if (weaponType == null)
             throw new Exception("Error. Weapon " + baseName + " does not have a WeaponType!!");
+
+        //Get random WeaponModifiers upon spawning, then apply
+        //them along with Rarity damage buff etc.
+        //Right now, only gets 1-2, but will later get more based on
+        //level and/or other variables.
+        WeaponRNG = new SeedRandom(LevelGenerator.Instance.RNGInitialValue);
+        for(int numMods = 0; numMods <= WeaponRNG.State % 2; numMods++)
+        {
+            //TODO: Create RNG Manager Singleton that contains pools of items that will need to
+            // be randomly instantiated at run time, including WeaponModifiers, Weapons, and Enemies.
+
+            //WeaponModifier newMod = Resources.Load<WeaponModifier>("Weapon Modifiers")
+        }
     }
 
     //virtual firing method that shoots gun based on fire rate,
@@ -304,6 +321,8 @@ public class Weapon : Lootable
         pickupBox.enabled = false;
         isEquipped = true;
         FakeHeight.SetShadowVisibility(false);
+
+        OnWeaponEquipped();
     }
 
     public virtual void Unequip()
@@ -315,6 +334,8 @@ public class Weapon : Lootable
 
         gameObject.SetActive(false);
         FakeHeight.SetShadowVisibility(true);
+
+        OnWeaponUnequipped();
     }
 
     /**

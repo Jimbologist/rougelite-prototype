@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[CreateAssetMenu(menuName = "Item Data/Weapon Modifier Types", order = 2)]
 public class WeaponModifierType : ScriptableObject
 {
     [SerializeField] private Color _toolTipNoteColor;

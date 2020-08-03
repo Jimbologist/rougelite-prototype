@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[CreateAssetMenu(menuName = "Item Data/Weapon Types", order = 1)]
 public class WeaponType : ScriptableObject
 {
     [SerializeField] private int _maxAmmoCap;
